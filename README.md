@@ -1,1 +1,1 @@
-# practise-application
+# practice-application
