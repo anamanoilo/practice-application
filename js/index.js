@@ -1,5 +1,7 @@
 // import { books } from "./books.js";
 import books from "./books.js";
+const BOOKS = "book";
+localStorage.setItem(BOOKS, JSON.stringify(books));
 
 const firstDivRef = document.createElement("div");
 const secondDivRef = document.createElement("div");
@@ -15,7 +17,9 @@ titleRef.textContent = "Library";
 addBtnRef.textContent = "Add";
 firstDivRef.append(titleRef, bookListRef, addBtnRef);
 
-function renderList(books) {
+function renderList() {
+  const books = JSON.parse(localStorage.getItem(BOOKS));
+
   const markup = books
     .map(({ id, title }) => {
       return `<li id="${id}">
@@ -39,12 +43,12 @@ function renderList(books) {
     titleRef.addEventListener("click", renderPreview)
   );
 }
-renderList(books);
+renderList();
 
 addBtnRef.addEventListener("click", addBook);
 
-function bookPreviewMarkup({ title, author, img, plot }) {
-  return `<div>
+function bookPreviewMarkup({ title, author, img, plot, id }) {
+  return `<div id="${id}" class="wrapper">
             <h2>${title}</h2>
             <p>${author}</p>
             <img src="${img}" alt="Book cover" width="250px">
@@ -76,38 +80,74 @@ function formMarkup({ title, author, img, plot }) {
 }
 
 function renderPreview(event) {
+  const books = JSON.parse(localStorage.getItem(BOOKS));
   const book = books.find((book) => book.title === event.target.textContent);
   const markup = bookPreviewMarkup(book);
   secondDivRef.innerHTML = "";
   secondDivRef.insertAdjacentHTML("afterbegin", markup);
 }
 
-function editBook() {
-  console.log("edit");
+function editBook(event) {
+  const id = event.target.parentElement.id;
+  const books = JSON.parse(localStorage.getItem(BOOKS));
+  const bookToEdit = books.find((book) => id === book.id);
+  const markup = formMarkup(bookToEdit);
+  secondDivRef.innerHTML = "";
+  secondDivRef.insertAdjacentHTML("afterbegin", markup);
+  saveInputData(bookToEdit);
+  const saveBtn = document.querySelector(".save-btn");
+  saveBtn.addEventListener("click", onSaveData);
+
+  function onSaveData() {
+    if (Object.values(bookToEdit).includes("")) {
+      alert("Please fill in all the fields");
+      return;
+    }
+    const markup = bookPreviewMarkup(bookToEdit);
+    secondDivRef.innerHTML = "";
+    secondDivRef.insertAdjacentHTML("afterbegin", markup);
+
+    const index = books.indexOf(bookToEdit);
+    books[index] = bookToEdit;
+    localStorage.setItem(BOOKS, JSON.stringify(books));
+
+    // const updatedBooks = books.map((book) =>
+    //   book.id === id ? bookToEdit : book
+    // );
+    // localStorage.setItem(BOOKS, JSON.stringify(updatedBooks));
+    bookListRef.innerHTML = "";
+    renderList();
+  }
 }
 
 function deleteBook(event) {
   const id = event.target.parentElement.id;
+
+  const books = JSON.parse(localStorage.getItem(BOOKS));
   const updatedBooks = books.filter((book) => id !== book.id);
+
+  localStorage.setItem(BOOKS, JSON.stringify(updatedBooks));
   bookListRef.innerHTML = "";
-  renderList(updatedBooks);
+  renderList();
+  const wrapper = document.querySelector(".wrapper");
+  if (wrapper) {
+    if (wrapper.id === id) {
+      secondDivRef.innerHTML = "";
+    }
+  }
 }
 
 function addBook() {
-  const newBook = { id: Date.now(), title: "", author: "", img: "", plot: "" };
+  const newBook = {
+    id: `${Date.now()}`,
+    title: "",
+    author: "",
+    img: "",
+    plot: "",
+  };
   const markup = formMarkup(newBook);
   secondDivRef.innerHTML = "";
   secondDivRef.insertAdjacentHTML("afterbegin", markup);
-
-  function saveInputData(book) {
-    const inputAllRef = document.querySelectorAll("input");
-    function onChange(e) {
-      book[e.target.name] = e.target.value;
-    }
-    inputAllRef.forEach((inputRef) =>
-      inputRef.addEventListener("change", onChange)
-    );
-  }
 
   saveInputData(newBook);
 
@@ -122,5 +162,20 @@ function addBook() {
     const markup = bookPreviewMarkup(newBook);
     secondDivRef.innerHTML = "";
     secondDivRef.insertAdjacentHTML("afterbegin", markup);
+    const books = JSON.parse(localStorage.getItem(BOOKS));
+    books.push(newBook);
+    localStorage.setItem(BOOKS, JSON.stringify(books));
+    bookListRef.innerHTML = "";
+    renderList();
   }
+}
+
+function saveInputData(book) {
+  const inputAllRef = document.querySelectorAll("input");
+  function onChange(e) {
+    book[e.target.name] = e.target.value;
+  }
+  inputAllRef.forEach((inputRef) =>
+    inputRef.addEventListener("change", onChange)
+  );
 }
