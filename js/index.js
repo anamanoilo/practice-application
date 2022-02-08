@@ -96,9 +96,9 @@ function editBook(event) {
   secondDivRef.insertAdjacentHTML("afterbegin", markup);
   saveInputData(bookToEdit);
   const saveBtn = document.querySelector(".save-btn");
-  saveBtn.addEventListener("click", onSaveData);
+  saveBtn.addEventListener("click", saveEditedData);
 
-  function onSaveData() {
+  function saveEditedData() {
     if (Object.values(bookToEdit).includes("")) {
       alert("Please fill in all the fields");
       return;
